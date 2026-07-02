@@ -1,4 +1,4 @@
 package com.okadali.rate_limiter.redis;
 
-public record RateLimitResult() {
+public record RateLimitResult(String strategy) {
 }

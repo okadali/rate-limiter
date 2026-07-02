@@ -1,4 +1,12 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
-public class FixedWindowCounterRateLimitStrategy {
+import com.okadali.rate_limiter.redis.RateLimitResult;
+import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConditionalOnProperty(name = "spring.application.rate-limiting-strategy", havingValue = "fixed-window")
+public class FixedWindowCounterRateLimitStrategy implements RateLimitStrategy {
+
 }
