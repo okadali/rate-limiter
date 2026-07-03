@@ -5,5 +5,5 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface RateLimiterService {
 
-    RateLimitResult handleRequest(HttpServletRequest request);
+    boolean handleRequest(HttpServletRequest request);
 }

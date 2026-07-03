@@ -11,11 +11,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RateLimiterServiceImpl implements RateLimiterService {
 
-
     private final RateLimitStrategy rateLimitStrategy;
 
     @Override
-    public RateLimitResult handleRequest(HttpServletRequest request) {
-        return rateLimitStrategy.tryAcquire();
+    public boolean handleRequest(HttpServletRequest request) {
+        return rateLimitStrategy.tryAcquire(request);
     }
 }
