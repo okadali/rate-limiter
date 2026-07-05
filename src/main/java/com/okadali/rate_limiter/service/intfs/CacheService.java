@@ -2,6 +2,7 @@ package com.okadali.rate_limiter.service.intfs;
 
 import java.awt.desktop.AboutEvent;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 public interface CacheService {
 
@@ -12,4 +13,6 @@ public interface CacheService {
     void reset();
 
     boolean hasKey(String key);
+
+    long getExpireTime(String key, TimeUnit timeUnit);
 }
