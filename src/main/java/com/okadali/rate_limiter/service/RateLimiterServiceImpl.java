@@ -15,6 +15,7 @@ public class RateLimiterServiceImpl implements RateLimiterService {
 
     @Override
     public boolean handleRequest(HttpServletRequest request) {
+        //TODO: ilgili istek aktarım sürecinin işletilmesi
         return rateLimitStrategy.tryAcquire(request);
     }
 }
