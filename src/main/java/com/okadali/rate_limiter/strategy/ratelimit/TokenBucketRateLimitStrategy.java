@@ -4,10 +4,11 @@ import com.okadali.rate_limiter.exception.RateLimitException;
 import com.okadali.rate_limiter.service.intfs.CacheService;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -27,14 +28,14 @@ public class TokenBucketRateLimitStrategy implements RateLimitStrategy {
     private final long TOKEN_REFILL_PERIOD_IN_SECOND = 60;
 
     @Override
-    public boolean tryAcquire(HttpServletRequest request) {
+    public boolean tryAcquire(ServerHttpRequest request) {
         final String userIp = DataExtractionUtils.extractIpFromRequest(request);
 
         if(cacheService.hasKey(userIp)) {
             int accessCount = (int) cacheService.get(userIp);
 
             if(accessCount < 1) {
-                throw new RateLimitException();
+                //TODO: Fix return Mono.error(new RateLimitException());
             }
 
             long expiryTime = cacheService.getExpireTime(userIp, TimeUnit.SECONDS);

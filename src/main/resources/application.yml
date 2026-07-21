@@ -2,7 +2,8 @@ spring:
   application:
     name: rate-limiter
     # fixed-window, leaking-bucket, sliding-window-counter, sliding-window-log, token-bucket
-    rate-limiting-strategy: fixed-window
+    rate-limiting-strategy: { ALGORITHM }
+    base-url: { URL }
   data:
     redis:
       host: { HOST }

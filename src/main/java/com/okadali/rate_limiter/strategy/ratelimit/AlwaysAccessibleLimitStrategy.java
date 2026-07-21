@@ -6,10 +6,10 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "spring.application.rate-limiting-strategy", havingValue = "sliding-window-counter")
-public class SlidingWindowCounterRateLimitStrategy implements RateLimitStrategy {
+@ConditionalOnProperty(name = "spring.application.rate-limiting-strategy", havingValue = "always-accessible")
+public class AlwaysAccessibleLimitStrategy implements RateLimitStrategy {
     @Override
     public boolean tryAcquire(ServerHttpRequest request) {
-        return false;
+        return true;
     }
 }

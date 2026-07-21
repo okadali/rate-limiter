@@ -1,7 +1,6 @@
 package com.okadali.rate_limiter.strategy.intfs;
 
-import com.okadali.rate_limiter.redis.RateLimitResult;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 
 public interface RateLimitStrategy {
 
@@ -9,5 +8,5 @@ public interface RateLimitStrategy {
         return this.getClass().getSimpleName();
     }
 
-    boolean tryAcquire(HttpServletRequest request);
+    boolean tryAcquire(ServerHttpRequest request);
 }

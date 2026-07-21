@@ -1,9 +1,8 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
-import com.okadali.rate_limiter.redis.RateLimitResult;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -11,7 +10,7 @@ import org.springframework.stereotype.Component;
 public class FixedWindowCounterRateLimitStrategy implements RateLimitStrategy {
 
     @Override
-    public boolean tryAcquire(HttpServletRequest request) {
+    public boolean tryAcquire(ServerHttpRequest request) {
         return false;
     }
 }

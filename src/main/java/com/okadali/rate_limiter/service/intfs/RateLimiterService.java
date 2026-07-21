@@ -1,9 +1,13 @@
 package com.okadali.rate_limiter.service.intfs;
 
-import com.okadali.rate_limiter.redis.RateLimitResult;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import org.springframework.core.io.buffer.DataBuffer;
 
 public interface RateLimiterService {
 
-    boolean handleRequest(HttpServletRequest request);
+    Mono<ResponseEntity<Flux<DataBuffer>>> handleRequest(ServerHttpRequest request);
 }
