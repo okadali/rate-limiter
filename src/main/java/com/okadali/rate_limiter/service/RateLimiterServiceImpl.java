@@ -4,19 +4,16 @@ import com.okadali.rate_limiter.service.intfs.RateLimiterService;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import org.springframework.core.io.buffer.DataBuffer;import java.time.Duration;
 
 
 @Service
@@ -32,59 +29,41 @@ public class RateLimiterServiceImpl implements RateLimiterService {
 
         // TODO: rateLimitStrategy.tryAcquire(request);
 
-        // 1. İSTEMCİDEN (Postman) GELEN başlıkları temizle
-        HttpHeaders filteredRequestHeaders = new HttpHeaders();
-        request.getHeaders().forEach((key, values) -> {
-            if (!key.equalsIgnoreCase(HttpHeaders.HOST) &&
-                    !key.equalsIgnoreCase(HttpHeaders.CONNECTION) &&
-                    !key.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH) && // WebClient kendi hesaplayacak
-                    !key.equalsIgnoreCase(HttpHeaders.TRANSFER_ENCODING) &&
-                    !key.equalsIgnoreCase(HttpHeaders.ACCEPT_ENCODING)) { // GZIP çakışmasını önler
-                filteredRequestHeaders.addAll(key, values);
-            }
-        });
-
-        HttpMethod method = request.getMethod();
-        WebClient.RequestBodySpec bodySpec = webClient.method(method)
-                .uri(uriBuilder -> {
-                    uriBuilder.path(request.getURI().getPath());
-                    if (request.getURI().getQuery() != null) {
-                        uriBuilder.query(request.getURI().getQuery());
-                    }
-                    return uriBuilder.build();
+        return webClient.method(request.getMethod())
+                // Keep only the path (e.g., /products)
+                .uri(request.getURI().getPath())
+                .headers(headers -> {
+                    // Copy all original headers
+                    headers.addAll(request.getHeaders());
+                    // CRITICAL: Remove original Host header so dummyjson.com doesn't reject it
+                    headers.remove(HttpHeaders.HOST);
                 })
-                .headers(headers -> headers.putAll(filteredRequestHeaders));
-
-        // 2. KRİTİK NOKTA: GET veya HEAD isteklerinde ASLA body ekleme!
-        WebClient.RequestHeadersSpec<?> headersSpec;
-        if (HttpMethod.GET.equals(method) || HttpMethod.HEAD.equals(method)) {
-            headersSpec = bodySpec;
-        } else {
-            headersSpec = bodySpec.body(BodyInserters.fromDataBuffers(request.getBody()));
-        }
-
-        // 3. İsteği gönder ve yanıtı işle
-        return headersSpec.exchangeToMono(clientResponse -> {
-
-                    // 4. HEDEFTEN GELEN yanıt başlıklarını temizle
-                    HttpHeaders responseHeaders = new HttpHeaders();
-                    clientResponse.headers().asHttpHeaders().forEach((key, values) -> {
-                        if (!key.equalsIgnoreCase(HttpHeaders.CONTENT_LENGTH) &&
-                                !key.equalsIgnoreCase(HttpHeaders.TRANSFER_ENCODING) &&
-                                !key.equalsIgnoreCase(HttpHeaders.CONNECTION) &&
-                                !key.equalsIgnoreCase(HttpHeaders.CONTENT_ENCODING)) {
-                            responseHeaders.addAll(key, values);
-                        }
-                    });
-
-                    return Mono.just(ResponseEntity.status(clientResponse.statusCode())
-                            .headers(responseHeaders)
-                            // 5. Akış (stream) sırasında bir kopma olursa logla
-                            .body(clientResponse.bodyToFlux(DataBuffer.class)
-                                    .doOnError(e -> log.error("Stream transfer sırasında hata: {}", e.getMessage()))));
-                })
-                .timeout(Duration.ofSeconds(10))
-                .doOnError(e -> log.error("Proxy hedef sunucuya bağlanamadı: {}", e.getMessage()))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_GATEWAY).build()));
+                // Safely prepares the incoming Postman request body stream without blocking or locking the memory state.
+                .body(BodyInserters.fromDataBuffers(request.getBody()))
+                // Use retrieve() to automatically handle connection lifecycles safely
+                .retrieve()
+                // Converts the response into an asynchronous entity stream
+                .toEntityFlux(DataBuffer.class)
+                // Gracefully handle errors so the connection drops cleanly if something fails
+                .onErrorResume(WebClientResponseException.class, ex -> Mono.just(
+                        ResponseEntity.status(ex.getStatusCode())
+                                .headers(ex.getHeaders())
+                                .body(Flux.empty())
+                ));
     }
+
+// DEPRECATED
+//    @RequestMapping(value = "/api/**", method = {RequestMethod.GET, RequestMethod.POST})
+//    public Mono<ResponseEntity<Flux<DataBuffer>>> proxy(ServerHttpRequest request) {
+//
+//        return webClient.method(request.getMethod())
+//                .uri(request.getURI().getPath())
+//                .headers(headers -> headers.addAll(request.getHeaders()))
+//                .body(request.getBody(), DataBuffer.class)
+//                .exchangeToMono(response -> Mono.just(
+//                        ResponseEntity.status(response.statusCode())
+//                                .headers(response.headers().asHttpHeaders())
+//                                .body(response.bodyToFlux(DataBuffer.class))
+//                ));
+//    }
 }
