@@ -14,7 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 @Configuration
 public class RedisConfig {
 
-    @Bean
+//    @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory, ObjectMapper objectMapper) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(redisConnectionFactory);
@@ -30,19 +30,19 @@ public class RedisConfig {
         return template;
     }
 
-//    @Bean
-//    public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory, ObjectMapper objectMapper) {
-//        final StringRedisSerializer keySerializer = new StringRedisSerializer();
-//        final GenericJacksonJsonRedisSerializer genericJacksonJsonRedisSerializer = new GenericJacksonJsonRedisSerializer(objectMapper);
-//
-//        final RedisSerializationContext<String, Object> serializationContext =
-//                RedisSerializationContext.<String, Object>newSerializationContext(keySerializer)
-//                        .key(keySerializer)
-//                        .value(genericJacksonJsonRedisSerializer)
-//                        .hashKey(keySerializer)
-//                        .hashValue(genericJacksonJsonRedisSerializer)
-//                        .build();
-//
-//        return new ReactiveRedisTemplate<>(factory, serializationContext);
-//    }
+    @Bean
+    public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory, ObjectMapper objectMapper) {
+        final StringRedisSerializer keySerializer = new StringRedisSerializer();
+        final GenericJacksonJsonRedisSerializer genericJacksonJsonRedisSerializer = new GenericJacksonJsonRedisSerializer(objectMapper);
+
+        final RedisSerializationContext<String, Object> serializationContext =
+                RedisSerializationContext.<String, Object>newSerializationContext(keySerializer)
+                        .key(keySerializer)
+                        .value(genericJacksonJsonRedisSerializer)
+                        .hashKey(keySerializer)
+                        .hashValue(genericJacksonJsonRedisSerializer)
+                        .build();
+
+        return new ReactiveRedisTemplate<>(factory, serializationContext);
+    }
 }

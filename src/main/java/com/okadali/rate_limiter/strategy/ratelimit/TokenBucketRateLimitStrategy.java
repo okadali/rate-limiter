@@ -1,7 +1,7 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
 import com.okadali.rate_limiter.exception.RateLimitException;
-import com.okadali.rate_limiter.service.intfs.CacheService;
+import com.okadali.rate_limiter.service.intfs.ReactiveCacheService;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 @Component
 @ConditionalOnProperty(
@@ -22,30 +21,30 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class TokenBucketRateLimitStrategy implements RateLimitStrategy {
 
-    private final CacheService cacheService;
+    private final ReactiveCacheService cacheService;
 
     private final int TOKEN_CAPACITY = 4;
     private final long TOKEN_REFILL_PERIOD_IN_SECOND = 60;
 
     @Override
-    public boolean tryAcquire(ServerHttpRequest request) {
+    public Mono<Boolean> tryAcquire(ServerHttpRequest request) {
         final String userIp = DataExtractionUtils.extractIpFromRequest(request);
 
-        if(cacheService.hasKey(userIp)) {
-            int accessCount = (int) cacheService.get(userIp);
+        return cacheService.get(userIp)
+                .flatMap(cachedValue -> {
+                    int accessCount = (int) cachedValue;
 
-            if(accessCount < 1) {
-                //TODO: Fix return Mono.error(new RateLimitException());
-            }
+                    if(accessCount < 1) {
+                        return Mono.error(new RateLimitException());
+                    }
 
-            long expiryTime = cacheService.getExpireTime(userIp, TimeUnit.SECONDS);
-
-            cacheService.put(userIp, --accessCount, Duration.ofSeconds(expiryTime));
-        }
-        else {
-            cacheService.put(userIp, TOKEN_CAPACITY - 1, Duration.ofSeconds(TOKEN_REFILL_PERIOD_IN_SECOND));
-        }
-
-        return true;
+                    return cacheService.getExpireTime(userIp)
+                            .flatMap(expiryDuration ->
+                                cacheService.put(userIp, accessCount - 1, expiryDuration)
+                            );
+                })
+                .switchIfEmpty(Mono.defer(() ->
+                    cacheService.put(userIp, TOKEN_CAPACITY - 1, Duration.ofSeconds(TOKEN_REFILL_PERIOD_IN_SECOND))
+                ));
     }
 }

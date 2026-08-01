@@ -1,6 +1,5 @@
 package com.okadali.rate_limiter.service.intfs;
 
-import java.awt.desktop.AboutEvent;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 

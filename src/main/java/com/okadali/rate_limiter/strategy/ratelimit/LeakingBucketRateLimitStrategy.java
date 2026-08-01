@@ -4,12 +4,13 @@ import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 @Component
 @ConditionalOnProperty(name = "spring.application.rate-limiting-strategy", havingValue = "leaking-bucket")
 public class LeakingBucketRateLimitStrategy implements RateLimitStrategy {
     @Override
-    public boolean tryAcquire(ServerHttpRequest request) {
-        return false;
+    public Mono<Boolean> tryAcquire(ServerHttpRequest request) {
+        return Mono.just(true);
     }
 }

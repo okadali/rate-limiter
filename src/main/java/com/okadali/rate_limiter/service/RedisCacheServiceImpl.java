@@ -9,7 +9,8 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 
-@Service
+//@Service
+@Deprecated
 @RequiredArgsConstructor
 public class RedisCacheServiceImpl implements CacheService {
 

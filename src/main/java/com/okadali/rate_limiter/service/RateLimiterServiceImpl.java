@@ -27,29 +27,27 @@ public class RateLimiterServiceImpl implements RateLimiterService {
     @Override
     public Mono<ResponseEntity<Flux<DataBuffer>>> handleRequest(ServerHttpRequest request) {
 
-        // TODO: rateLimitStrategy.tryAcquire(request);
+        rateLimitStrategy.tryAcquire(request);
 
-        return webClient.method(request.getMethod())
-                // Keep only the path (e.g., /products)
-                .uri(request.getURI().getPath())
-                .headers(headers -> {
-                    // Copy all original headers
-                    headers.addAll(request.getHeaders());
-                    // CRITICAL: Remove original Host header so dummyjson.com doesn't reject it
-                    headers.remove(HttpHeaders.HOST);
-                })
-                // Safely prepares the incoming Postman request body stream without blocking or locking the memory state.
-                .body(BodyInserters.fromDataBuffers(request.getBody()))
-                // Use retrieve() to automatically handle connection lifecycles safely
-                .retrieve()
-                // Converts the response into an asynchronous entity stream
-                .toEntityFlux(DataBuffer.class)
-                // Gracefully handle errors so the connection drops cleanly if something fails
-                .onErrorResume(WebClientResponseException.class, ex -> Mono.just(
-                        ResponseEntity.status(ex.getStatusCode())
-                                .headers(ex.getHeaders())
-                                .body(Flux.empty())
-                ));
+        return rateLimitStrategy.tryAcquire(request).flatMap(validAcquire -> {
+            return webClient.method(request.getMethod())
+                    .uri(request.getURI().getPath())
+                    .headers(headers -> {
+                        headers.addAll(request.getHeaders());
+                        // CRITICAL: Remove original Host header so dummyjson.com doesn't reject it
+                        headers.remove(HttpHeaders.HOST);
+                    })
+                    .body(BodyInserters.fromDataBuffers(request.getBody()))
+                    .retrieve()
+                    // Converts the response into an asynchronous entity stream
+                    .toEntityFlux(DataBuffer.class)
+                    // Gracefully handle errors so the connection drops cleanly if something fails
+                    .onErrorResume(WebClientResponseException.class, ex -> Mono.just(
+                            ResponseEntity.status(ex.getStatusCode())
+                                    .headers(ex.getHeaders())
+                                    .body(Flux.empty())
+                    ));
+        });
     }
 
 // DEPRECATED
