@@ -17,4 +17,6 @@ public interface ReactiveCacheService {
     Mono<Duration> getExpireTime(String key);
 
     Mono<Long> numberOfTotalKeys();
+
+    Mono<Long> increment(String key);
 }

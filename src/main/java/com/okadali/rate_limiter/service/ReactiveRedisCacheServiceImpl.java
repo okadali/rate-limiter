@@ -9,6 +9,9 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Lettuce kullanıldığı için thread-safe, kendiliğinden handle ediliyor.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReactiveRedisCacheServiceImpl implements ReactiveCacheService {
@@ -27,7 +30,7 @@ public class ReactiveRedisCacheServiceImpl implements ReactiveCacheService {
 
     @Override
     public Mono<Void> reset() {
-        return redisTemplate.delete(redisTemplate.keys("*")).then();
+        return redisTemplate.execute(connection -> connection.serverCommands().flushDb()).then();
     }
 
     @Override
@@ -43,5 +46,10 @@ public class ReactiveRedisCacheServiceImpl implements ReactiveCacheService {
     @Override
     public Mono<Long> numberOfTotalKeys() {
         return redisTemplate.execute(connection -> connection.serverCommands().dbSize()).next();
+    }
+
+    @Override
+    public Mono<Long> increment(String key) {
+        return redisTemplate.opsForValue().increment(key);
     }
 }
