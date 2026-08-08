@@ -39,4 +39,9 @@ public class ReactiveRedisCacheServiceImpl implements ReactiveCacheService {
     public Mono<Duration> getExpireTime(String key) {
         return redisTemplate.getExpire(key);
     }
+
+    @Override
+    public Mono<Long> numberOfTotalKeys() {
+        return redisTemplate.execute(connection -> connection.serverCommands().dbSize()).next();
+    }
 }
