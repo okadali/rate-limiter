@@ -4,4 +4,9 @@
 - [ ] SlidingWindowCounterRateLimitStrategy
 - [ ] SlidingWindowLogRateLimitStrategy
 - [ ] Unit & Integration tests
-- [ ] YML Option integration
+- [ ] SPeL support of endpoints
+- [ ] Proxy header values
+- [ ] Dockerize
+- [ ] Kustomize
+- [ ] Stress test
+- [ ] Logging & Monitoring
