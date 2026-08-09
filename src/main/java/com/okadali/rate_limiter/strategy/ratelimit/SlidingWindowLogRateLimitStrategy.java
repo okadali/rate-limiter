@@ -11,6 +11,6 @@ import reactor.core.publisher.Mono;
 public class SlidingWindowLogRateLimitStrategy implements RateLimitStrategy {
     @Override
     public Mono<Boolean> tryAcquire(ServerHttpRequest request) {
-        return Mono.just(true);
+        return Mono.error(new UnsupportedOperationException());
     }
 }

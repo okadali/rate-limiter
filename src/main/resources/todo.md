@@ -1,6 +1,8 @@
 # TO-DO
 
-- [X] FixedWindowCounterRateLimitStrategy
+- [ ] LeakingBucketRateLimitStrategy
+- [ ] TokenBucketRateLimitStrategy
+- [ ] FixedWindowCounterRateLimitStrategy
 - [ ] SlidingWindowCounterRateLimitStrategy
 - [ ] SlidingWindowLogRateLimitStrategy
 - [ ] Unit & Integration tests
