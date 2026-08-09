@@ -5,8 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class RedisCleanOnStartupRunner implements CommandLineRunner {
 
     private final ReactiveRedisTemplate<String, Object> redisTemplate;
+    private final ReactiveStringRedisTemplate stringRedisTemplate;
 
 
     @Override
@@ -25,6 +25,13 @@ public class RedisCleanOnStartupRunner implements CommandLineRunner {
                 .then()
                 .doOnSuccess(v -> log.info("Redis Successfully cleaned up"))
                 .doOnError(e -> log.error("Redis cleanup failed on startup!", e))
+                .block();
+
+
+        stringRedisTemplate.execute(connection -> connection.serverCommands().flushAll())
+                .then()
+                .doOnSuccess(v -> log.info("String Redis Successfully cleaned up"))
+                .doOnError(e -> log.error("String Redis cleanup failed on startup!", e))
                 .block();
     }
 }

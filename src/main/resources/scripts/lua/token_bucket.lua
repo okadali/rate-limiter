@@ -11,7 +11,7 @@ local refill_rate = tonumber(ARGV[2])
 local current_time = tonumber(ARGV[3])
 
 -- Redis'ten mevcut değerleri al, yoksa varsayılan değerleri kullan
-local last_refill = tonumber(redis.(call'GET', key_last_refill) or current_time)
+local last_refill = tonumber(redis.call('GET', key_last_refill) or current_time)
 local tokens = tonumber(redis.call('GET', key_count) or capacity)
 
 -- Geçen süreyi ve eklenecek token miktarını hesapla
