@@ -1,16 +1,18 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
 import com.okadali.rate_limiter.exception.RateLimitException;
-import com.okadali.rate_limiter.service.intfs.ReactiveCacheService;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
+import java.util.List;
 
 @Component
 @ConditionalOnProperty(
@@ -18,33 +20,43 @@ import java.time.Duration;
         havingValue = "token-bucket",
         matchIfMissing = true
 )
-@RequiredArgsConstructor
 public class TokenBucketRateLimitStrategy implements RateLimitStrategy {
 
-    private final ReactiveCacheService cacheService;
+    private final ReactiveStringRedisTemplate redisTemplate;
+    private final DefaultRedisScript<Long> tokenBucketScript;
 
-    private final int TOKEN_CAPACITY = 4;
-    private final long TOKEN_REFILL_PERIOD_IN_SECOND = 60;
+    public TokenBucketRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
+
+        this.tokenBucketScript = new DefaultRedisScript<>();
+        this.tokenBucketScript.setLocation(new ClassPathResource("scripts/lua/token_bucket.lua"));
+        this.tokenBucketScript.setResultType(Long.class);
+    }
+
+    private final int BUCKET_CAPACITY = 1;
+    private final long REFILL_RATE = 1;
 
     @Override
     public Mono<Boolean> tryAcquire(ServerHttpRequest request) {
         final String userIp = DataExtractionUtils.extractIpFromRequest(request);
 
-        return cacheService.get(userIp)
-                .flatMap(cachedValue -> {
-                    int accessCount = (int) cachedValue;
+        String keyCount = "rate_limit:token_bucket:" + userIp + ":count";
+        String keyLastRefill = "rate_limit:token_bucket:" + userIp + ":lastRefill";
 
-                    if(accessCount < 1) {
-                        return Mono.error(new RateLimitException());
-                    }
+        List<String> keys = List.of(keyCount, keyLastRefill);
+        long currentTimeMs = System.currentTimeMillis();
 
-                    return cacheService.getExpireTime(userIp)
-                            .flatMap(expiryDuration ->
-                                cacheService.put(userIp, accessCount - 1, expiryDuration)
-                            );
-                })
-                .switchIfEmpty(Mono.defer(() ->
-                    cacheService.put(userIp, TOKEN_CAPACITY - 1, Duration.ofSeconds(TOKEN_REFILL_PERIOD_IN_SECOND))
-                ));
+        return redisTemplate.execute(
+                tokenBucketScript,
+                keys,
+                List.of(
+                        String.valueOf(BUCKET_CAPACITY),
+                        String.valueOf(REFILL_RATE),
+                        String.valueOf(currentTimeMs)
+                )
+        ).next().flatMap(result -> {
+            if(result != 1L) return Mono.error(new RateLimitException());
+            return Mono.just(true);
+        });
     }
 }

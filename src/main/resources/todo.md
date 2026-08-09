@@ -1,10 +1,10 @@
 # TO-DO
 
-- [ ] LeakingBucketRateLimitStrategy
-- [ ] TokenBucketRateLimitStrategy
-- [ ] FixedWindowCounterRateLimitStrategy
-- [ ] SlidingWindowCounterRateLimitStrategy
-- [ ] SlidingWindowLogRateLimitStrategy
+- [ ] LeakingBucketRateLimitStrategy Lua
+- [X] TokenBucketRateLimitStrategy Lua
+- [ ] FixedWindowCounterRateLimitStrategy Lua
+- [ ] SlidingWindowCounterRateLimitStrategy Lua
+- [ ] SlidingWindowLogRateLimitStrategy Lua
 - [ ] Unit & Integration tests
 - [ ] SPeL support of endpoints
 - [ ] Proxy header values
