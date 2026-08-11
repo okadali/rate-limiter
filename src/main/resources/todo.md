@@ -3,7 +3,7 @@
 - [ ] LeakingBucketRateLimitStrategy Lua
 - [X] TokenBucketRateLimitStrategy Lua
 - [X] FixedWindowCounterRateLimitStrategy Lua
-- [ ] SlidingWindowCounterRateLimitStrategy Lua
+- [X] SlidingWindowCounterRateLimitStrategy Lua
 - [X] SlidingWindowLogRateLimitStrategy Lua
 - [ ] Unit & Integration tests
 - [ ] SPeL support of endpoints
