@@ -37,3 +37,5 @@ if tokens > 0 then
 end
 
 return allowed
+
+-- kovayı "doldurma" işlemi istek geldiğinde yapılır, son doldurma saati kontrol edilir ve buna göre geçen sürede ne kadar tokenin ekleneceği hesaplanır, token harcama işlemi bundan sonra gerçekleştirilir.
