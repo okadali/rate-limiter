@@ -1,6 +1,7 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
 import com.okadali.rate_limiter.exception.RateLimitException;
+import com.okadali.rate_limiter.property.RateLimiterProperties;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,16 +22,22 @@ public class SlidingWindowLogRateLimitStrategy implements RateLimitStrategy {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> tokenBucketScript;
 
-    public SlidingWindowLogRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate) {
+    private final int LIMIT;
+    private final long WINDOW_SIZE_SECONDS;
+
+    public SlidingWindowLogRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate,
+                                             RateLimiterProperties properties) {
         this.redisTemplate = redisTemplate;
 
         this.tokenBucketScript = new DefaultRedisScript<>();
         this.tokenBucketScript.setLocation(new ClassPathResource("scripts/lua/sliding_window_log.lua"));
         this.tokenBucketScript.setResultType(Long.class);
+
+        this.LIMIT = properties.getConfigs().getSlidingWindowLog().getLimit();
+        this.WINDOW_SIZE_SECONDS = properties.getConfigs().getSlidingWindowLog().getWindowSize();
     }
 
-    private final int LIMIT = 10;
-    private final long WINDOW_SIZE_SECONDS = 60;
+
 
     @Override
     public Mono<Boolean> tryAcquire(ServerHttpRequest request) {

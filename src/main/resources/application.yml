@@ -4,6 +4,23 @@ spring:
     # fixed-window, leaking-bucket, sliding-window-counter, sliding-window-log, token-bucket
     rate-limiting-strategy: { ALGORITHM }
     base-url: { URL }
+  rate-limiting:
+    configs:
+      fixed-window:
+        window-size: 60
+        limit: 5
+      leaking-bucket:
+        capacity: 10
+        leak-rate: 1.0
+      sliding-window-counter:
+        limit: 10
+        window-size: 60
+      sliding-window-log:
+        limit: 10
+        window-size: 60
+      token-bucket:
+        capacity: 1
+        refill-rate: 1
   data:
     redis:
       host: { HOST }

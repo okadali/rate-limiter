@@ -1,6 +1,7 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
 import com.okadali.rate_limiter.exception.RateLimitException;
+import com.okadali.rate_limiter.property.RateLimiterProperties;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
 import lombok.RequiredArgsConstructor;
@@ -21,17 +22,21 @@ public class LeakingBucketRateLimitStrategy implements RateLimitStrategy {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> leakingBucketScript;
 
+    private final int BUCKET_CAPACITY;
+    private final double LEAK_RATE;
 
-    public LeakingBucketRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate) {
+
+    public LeakingBucketRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate,
+                                          RateLimiterProperties properties) {
         this.redisTemplate = redisTemplate;
 
         this.leakingBucketScript = new DefaultRedisScript<>();
         this.leakingBucketScript.setLocation(new ClassPathResource("scripts/lua/leaky_bucket.lua"));
         this.leakingBucketScript.setResultType(Long.class);
-    }
 
-    private final int BUCKET_CAPACITY = 10;
-    private final double LEAK_RATE = 1.0;
+        this.BUCKET_CAPACITY = properties.getConfigs().getLeakingBucket().getCapacity();
+        this.LEAK_RATE = properties.getConfigs().getLeakingBucket().getLeakRate();
+    }
 
     @Override
     public Mono<Boolean> tryAcquire(ServerHttpRequest request) {

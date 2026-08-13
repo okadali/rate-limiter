@@ -1,6 +1,7 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
 import com.okadali.rate_limiter.exception.RateLimitException;
+import com.okadali.rate_limiter.property.RateLimiterProperties;
 import com.okadali.rate_limiter.service.intfs.ReactiveCacheService;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
@@ -25,15 +26,19 @@ public class FixedWindowCounterRateLimitStrategy implements RateLimitStrategy {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> fixedWindowScript;
 
-    private final int WINDOW_SIZE_SECONDS = 60;
-    private final int LIMIT = 5;
+    private final int WINDOW_SIZE_SECONDS;
+    private final int LIMIT;
 
-    public FixedWindowCounterRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate) {
+    public FixedWindowCounterRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate,
+                                               RateLimiterProperties properties) {
         this.redisTemplate = redisTemplate;
 
         this.fixedWindowScript = new DefaultRedisScript<>();
         this.fixedWindowScript.setLocation(new ClassPathResource("scripts/lua/fixed_window.lua"));
         this.fixedWindowScript.setResultType(Long.class);
+
+        this.WINDOW_SIZE_SECONDS = properties.getConfigs().getFixedWindow().getWindowSize();
+        this.LIMIT = properties.getConfigs().getFixedWindow().getLimit();
     }
 
     @Override

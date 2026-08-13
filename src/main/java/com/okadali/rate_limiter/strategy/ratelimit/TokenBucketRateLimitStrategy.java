@@ -1,6 +1,7 @@
 package com.okadali.rate_limiter.strategy.ratelimit;
 
 import com.okadali.rate_limiter.exception.RateLimitException;
+import com.okadali.rate_limiter.property.RateLimiterProperties;
 import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,16 +25,19 @@ public class TokenBucketRateLimitStrategy implements RateLimitStrategy {
     private final ReactiveStringRedisTemplate redisTemplate;
     private final DefaultRedisScript<Long> tokenBucketScript;
 
-    public TokenBucketRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate) {
+    private final int BUCKET_CAPACITY;
+    private final long REFILL_RATE;
+
+    public TokenBucketRateLimitStrategy(ReactiveStringRedisTemplate redisTemplate, RateLimiterProperties properties) {
         this.redisTemplate = redisTemplate;
 
         this.tokenBucketScript = new DefaultRedisScript<>();
         this.tokenBucketScript.setLocation(new ClassPathResource("scripts/lua/token_bucket.lua"));
         this.tokenBucketScript.setResultType(Long.class);
-    }
 
-    private final int BUCKET_CAPACITY = 1;
-    private final long REFILL_RATE = 1;
+        this.BUCKET_CAPACITY = properties.getConfigs().getTokenBucket().getCapacity();
+        this.REFILL_RATE = properties.getConfigs().getTokenBucket().getRefillRate();
+    }
 
     @Override
     public Mono<Boolean> tryAcquire(ServerHttpRequest request) {
