@@ -14,20 +14,10 @@ import org.springframework.stereotype.Component;
 @Profile({"dev"})
 public class RedisCleanOnStartupRunner implements CommandLineRunner {
 
-    private final ReactiveRedisTemplate<String, Object> redisTemplate;
     private final ReactiveStringRedisTemplate stringRedisTemplate;
-
 
     @Override
     public void run(String... args) {
-
-        redisTemplate.execute(connection -> connection.serverCommands().flushAll())
-                .then()
-                .doOnSuccess(v -> log.info("Redis Successfully cleaned up"))
-                .doOnError(e -> log.error("Redis cleanup failed on startup!", e))
-                .block();
-
-
         stringRedisTemplate.execute(connection -> connection.serverCommands().flushAll())
                 .then()
                 .doOnSuccess(v -> log.info("String Redis Successfully cleaned up"))

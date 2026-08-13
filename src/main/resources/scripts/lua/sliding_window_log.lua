@@ -6,11 +6,12 @@
 
 local key = KEYS[1]
 local limit = tonumber(ARGV[1])
-local window_size_ms = tonumber(ARGV[2])
+local window_size_sec = tonumber(ARGV[2])
 local current_time_ms = tonumber(ARGV[3])
 local unique_id = ARGV[4]
 
 -- 1. ADIM: Güvenlik sınırı (Pencerenin başlangıç zamanını bul)
+local window_size_ms = window_size_sec * 1000
 local window_start_ms = current_time_ms - window_size_ms
 
 -- 2. ADIM: Eski kayıtları temizle (ZREMRANGEBYSCORE)

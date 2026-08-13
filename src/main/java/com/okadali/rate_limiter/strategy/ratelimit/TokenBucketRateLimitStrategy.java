@@ -5,7 +5,6 @@ import com.okadali.rate_limiter.strategy.intfs.RateLimitStrategy;
 import com.okadali.rate_limiter.util.DataExtractionUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.http.server.reactive.ServerHttpRequest;

@@ -30,7 +30,7 @@ public class SlidingWindowLogRateLimitStrategy implements RateLimitStrategy {
     }
 
     private final int LIMIT = 10;
-    private final long WINDOW_SIZE_MS = 60000;
+    private final long WINDOW_SIZE_SECONDS = 60;
 
     @Override
     public Mono<Boolean> tryAcquire(ServerHttpRequest request) {
@@ -46,7 +46,7 @@ public class SlidingWindowLogRateLimitStrategy implements RateLimitStrategy {
                 List.of(key),
                 List.of(
                         String.valueOf(LIMIT),
-                        String.valueOf(WINDOW_SIZE_MS),
+                        String.valueOf(WINDOW_SIZE_SECONDS),
                         String.valueOf(currentTimeMs),
                         uniqueRequestId
                 )

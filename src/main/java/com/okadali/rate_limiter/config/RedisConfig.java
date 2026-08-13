@@ -11,7 +11,8 @@ import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import tools.jackson.databind.ObjectMapper;
 
-@Configuration
+//@Configuration
+@Deprecated
 public class RedisConfig {
 
 //    @Bean
@@ -30,7 +31,7 @@ public class RedisConfig {
         return template;
     }
 
-    @Bean
+//    @Bean
     public ReactiveRedisTemplate<String, Object> reactiveRedisTemplate(ReactiveRedisConnectionFactory factory, ObjectMapper objectMapper) {
         final StringRedisSerializer keySerializer = new StringRedisSerializer();
         final GenericJacksonJsonRedisSerializer genericJacksonJsonRedisSerializer = new GenericJacksonJsonRedisSerializer(objectMapper);

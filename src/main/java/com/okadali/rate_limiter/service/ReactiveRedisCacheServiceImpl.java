@@ -9,11 +9,9 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Lettuce kullanıldığı için thread-safe, kendiliğinden handle ediliyor.
- */
-@Service
+//@Service
 @RequiredArgsConstructor
+@Deprecated
 public class ReactiveRedisCacheServiceImpl implements ReactiveCacheService {
 
     private final ReactiveRedisTemplate<String, Object> redisTemplate;
