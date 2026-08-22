@@ -9,22 +9,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GatewayControllerTest {
-
-    private final DefaultDataBufferFactory bufferFactory = new DefaultDataBufferFactory();
-
-
-    Mono<ResponseEntity<Flux<DataBuffer>>> successResponse;
-    Mono<ResponseEntity<Flux<DataBuffer>>> errorResponse;
 
     @InjectMocks
     GatewayController gatewayController;
@@ -32,24 +28,28 @@ class GatewayControllerTest {
     @Mock
     RateLimiterService rateLimiterService;
 
+    private final DefaultDataBufferFactory bufferFactory = new DefaultDataBufferFactory();
+    private WebTestClient webTestClient;
+
     @BeforeEach
     void setUp() {
-        successResponse = Mono.just(ResponseEntity.ok().body(Flux.just(bufferFactory.wrap("Success".getBytes()))));
-        errorResponse = Mono.just(ResponseEntity.status(429).body(Flux.just(bufferFactory.wrap("Too Many Requests".getBytes()))));
+        this.webTestClient = WebTestClient.bindToController(gatewayController).build();
     }
 
     @Test
-    void givenServerHttpRequest_whenPathExists_thenReturnResponse() {
-        ServerHttpRequest request = MockServerHttpRequest
-                .get("/test/path")
-                .build();
+    void givenAnyRequest_whenControllerInvoked_thenPassthroughToRateLimiter() {
+        DataBuffer mockBuffer = bufferFactory.wrap("Success".getBytes());
+        Flux<DataBuffer> mockFlux = Flux.just(mockBuffer);
+        ResponseEntity<Flux<DataBuffer>> mockResponseEntity = new ResponseEntity<>(mockFlux, HttpStatus.OK);
 
+        when(rateLimiterService.handleRequest(any(ServerHttpRequest.class)))
+                .thenReturn(Mono.just(mockResponseEntity));
 
-        when(rateLimiterService.handleRequest(request)).thenReturn(successResponse);
-
-        Mono<ResponseEntity<Flux<DataBuffer>>> response = gatewayController.gatewayController(request);
-
-
+        webTestClient.get()
+                .uri("/gateway")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class).isEqualTo("Success");
     }
 }
 
