@@ -32,14 +32,11 @@ public class RateLimiterServiceImpl implements RateLimiterService {
                 .uri(request.getURI().getPath())
                 .headers(headers -> {
                     headers.addAll(request.getHeaders());
-                    // CRITICAL: Remove original Host header so dummyjson.com doesn't reject it
                     headers.remove(HttpHeaders.HOST);
                 })
                 .body(BodyInserters.fromDataBuffers(request.getBody()))
                 .retrieve()
-                // Converts the response into an asynchronous entity stream
                 .toEntityFlux(DataBuffer.class)
-                // Gracefully handle errors so the connection drops cleanly if something fails
                 .onErrorResume(WebClientResponseException.class, ex -> Mono.just(
                         ResponseEntity.status(ex.getStatusCode())
                                 .headers(ex.getHeaders())

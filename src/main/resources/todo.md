@@ -6,7 +6,7 @@
 - [X] SlidingWindowCounterRateLimitStrategy Lua
 - [X] SlidingWindowLogRateLimitStrategy Lua
 - [X] Algorithm Standardization
-- [ ] Unit & Integration tests
+- [X] Unit & Integration tests
 - [ ] SPeL support of endpoints (?)
 - [ ] Proxy header values
 - [ ] Dockerize
